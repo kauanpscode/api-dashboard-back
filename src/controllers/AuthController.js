@@ -5,6 +5,7 @@ const secret = "secretKey";
 
 exports.register = async (req, res) => {
   const { username, password } = req.body;
+  console.log(req.body);
   try {
     const user = await User.create({ username, password });
     res.status(201).json({ message: "Usuário criado", user });
