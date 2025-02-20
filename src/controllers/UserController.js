@@ -2,7 +2,6 @@ const User = require("../models/UserModel");
 
 // Criar um novo usuário
 const createUser = async (req, res) => {
-  console.log(req.body);
   try {
     const { name, channel, shift } = req.body;
 
@@ -12,7 +11,9 @@ const createUser = async (req, res) => {
         .json({ error: "Todos os campos são obrigatórios" });
     }
 
-    const newUser = await User.create({ name, channel, shift });
+    const newUser = new User({ name, channel, shift });
+    await newUser.save(); // Salva no MongoDB
+
     res.status(201).json(newUser);
   } catch (error) {
     res
@@ -24,7 +25,7 @@ const createUser = async (req, res) => {
 // Obter todos os usuários
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.findAll();
+    const users = await User.find(); // Busca no MongoDB
     res.status(200).json(users);
   } catch (error) {
     res
@@ -34,10 +35,11 @@ const getAllUsers = async (req, res) => {
 };
 
 // Obter um usuário pelo ID
-const getUserbyId = async (req, res) => {
+const getUserById = async (req, res) => {
+  console.log(req.params);
   try {
-    const { id } = req.params;
-    const user = await User.findByPk(id);
+    const { _id } = req.params;
+    const user = await User.findById(_id); // Busca no MongoDB pelo _id
 
     if (!user) {
       return res.status(404).json({ error: "Usuário não encontrado" });
@@ -54,19 +56,18 @@ const getUserbyId = async (req, res) => {
 // Atualizar um usuário pelo ID
 const updateUserById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, channel, shift } = req.body;
+    const { _id, name, channel, shift } = req.body;
 
-    const user = await User.findByPk(id);
+    const user = await User.findById(_id);
 
     if (!user) {
       return res.status(404).json({ error: "Usuário não encontrado" });
     }
 
-    // Atualiza os campos se fornecidos no corpo da requisição
-    user.name = name || user.name;
-    user.channel = channel || user.channel;
-    user.shift = shift || user.shift;
+    // Atualiza apenas os campos fornecidos
+    if (name) user.name = name;
+    if (channel) user.channel = channel;
+    if (shift) user.shift = shift;
 
     await user.save();
     res.status(200).json(user);
@@ -82,13 +83,12 @@ const deleteUserById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const user = await User.findByPk(id);
+    const user = await User.findByIdAndDelete(id); // Deleta diretamente pelo MongoDB
 
     if (!user) {
       return res.status(404).json({ error: "Usuário não encontrado" });
     }
 
-    await user.destroy();
     res.status(200).json({ message: "Usuário deletado com sucesso" });
   } catch (error) {
     res
@@ -100,7 +100,7 @@ const deleteUserById = async (req, res) => {
 module.exports = {
   createUser,
   getAllUsers,
-  getUserbyId,
+  getUserById,
   updateUserById,
   deleteUserById,
 };

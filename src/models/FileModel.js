@@ -1,28 +1,29 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../config/database");
+const mongoose = require("mongoose");
 
-// Define o modelo File
-const File = sequelize.define("File", {
+const FileSchema = new mongoose.Schema({
   originalName: {
-    type: DataTypes.STRING,
-    allowNull: false,
+    type: String,
+    required: true,
   },
   filename: {
-    type: DataTypes.STRING,
-    allowNull: false,
+    type: String,
+    required: true,
   },
   channel_slug: {
-    type: DataTypes.STRING,
-    allowNull: false,
+    type: String,
+    required: true,
   },
   path: {
-    type: DataTypes.STRING,
-    allowNull: false,
+    type: String,
+    required: true,
   },
   uploadedAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
+    type: Date,
+    default: Date.now, // Substitui `defaultValue: DataTypes.NOW`
   },
 });
+
+// Criar o modelo File baseado no schema
+const File = mongoose.model("File", FileSchema);
 
 module.exports = File;

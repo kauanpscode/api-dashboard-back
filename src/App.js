@@ -14,10 +14,14 @@ app.use(express.urlencoded({ limit: "10mb", extended: true })); // Para formulá
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // Seu frontends
+    origin: [
+      "http://localhost:5173",
+      "http://dashboard-corandini.s3-website-sa-east-1.amazonaws.com",
+    ], // Corrigindo a sintaxe
     credentials: true,
   })
-); // Middleware para JSON
+);
+
 app.use(express.json());
 
 // Rotas

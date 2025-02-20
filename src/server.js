@@ -1,16 +1,20 @@
 const app = require("./App"); // Importa o app configurado
 const PORT = 3000;
-const sequelize = require("./config/database");
+const mongoose = require("mongoose"); // Importando mongoose
 
-// Sincronizar banco de dados
-sequelize
-  .sync({ force: false })
+// URL de conexão com o MongoDB
+const mongoURI =
+  "mongodb+srv://kauanps2271:daRD9FH2KqJLNNnJ@dashboard-corandini.sta2s.mongodb.net/?retryWrites=true&w=majority&appName=dashboard-corandini";
+
+// Conectar ao MongoDB
+mongoose
+  .connect(mongoURI)
   .then(() => {
-    console.log("Banco de dados sincronizado.");
+    console.log("🔥 Conectado ao MongoDB.");
     app.listen(PORT, () => {
       console.log(`Servidor rodando na porta http://localhost:${PORT}`);
     });
   })
   .catch((error) => {
-    console.error("Erro ao sincronizar o banco de dados:", error);
+    console.error("Erro ao conectar ao MongoDB:", error);
   });

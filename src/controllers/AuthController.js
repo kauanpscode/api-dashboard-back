@@ -5,9 +5,12 @@ const secret = "secretKey";
 
 exports.register = async (req, res) => {
   const { username, password } = req.body;
-  console.log(req.body);
+
   try {
-    const user = await User.create({ username, password });
+    // Não é necessário criptografar a senha aqui, o middleware do Mongoose já faz isso
+    const user = new User({ username, password });
+    await user.save(); // Salva o usuário no MongoDB
+
     res.status(201).json({ message: "Usuário criado", user });
   } catch (err) {
     res
@@ -18,13 +21,19 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   const { username, password } = req.body;
-  const user = await User.findOne({ where: { username } });
-  if (!user) return res.status(404).json({ message: "Usuário não encontrado" });
 
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch)
-    return res.status(401).json({ message: "Credenciais inválidas" });
+  try {
+    const user = await User.findOne({ username }); // Busca no MongoDB
+    if (!user)
+      return res.status(404).json({ message: "Usuário não encontrado" });
 
-  const token = jwt.sign({ id: user.id }, secret, { expiresIn: "1h" });
-  res.json({ token });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch)
+      return res.status(401).json({ message: "Credenciais inválidas" });
+
+    const token = jwt.sign({ id: user._id }, secret, { expiresIn: "1h" }); // Utiliza _id do MongoDB
+    res.json({ token });
+  } catch (err) {
+    res.status(500).json({ message: "Erro no login", error: err.message });
+  }
 };

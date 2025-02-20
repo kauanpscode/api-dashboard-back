@@ -1,20 +1,12 @@
-const { DataTypes } = require("sequelize");
-const sequelize = require("../config/database");
+const mongoose = require("mongoose");
 
-// Define o modelo User
-const User = sequelize.define("User", {
-  name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  channel: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  shift: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
+const UserSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  channel: { type: String, required: true },
+  shift: { type: String, required: true },
 });
+
+// Criar o modelo User baseado no schema
+const User = mongoose.model("User", UserSchema);
 
 module.exports = User;
