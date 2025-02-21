@@ -31,10 +31,14 @@ const calcularProdutividade = (req, res) => {
     const channel = usuariosTurnoTabela[usuario]?.channel || "Desconhecido";
 
     let meta = 11.66;
-    if (channel === "Treinamento") meta = 0;
-    else if (channel === "Meli Mensageria") meta = 16.66;
-    else if (["Meli Reclamação", "Meli Mediação"].includes(channel))
+
+    if (channel === "Treinamento") {
+      meta = 0;
+    } else if (channel === "Meli Mensageria") {
+      meta = 16.66;
+    } else if (["Meli Reclamação", "Meli Mediação"].includes(channel)) {
       meta = 14.2;
+    }
 
     const metaTotal = Math.floor(meta * horasTrabalhadas);
     const porcentagem =
