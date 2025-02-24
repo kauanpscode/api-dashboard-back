@@ -20,14 +20,8 @@ const calcularProdutividade = (req, res) => {
 
   const usuariosInfo = Object.keys(productivityData).reduce((acc, usuario) => {
     const now = new Date();
-    const options = {
-      timeZone: "America/Sao_Paulo",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-    };
-    const currentHour = new Intl.DateTimeFormat("en-US", options).format(now);
+    let currentHour = now.getUTCHours() - 3; // Ajusta para GMT-3
+    if (currentHour < 0) currentHour += 24; // Correção para valores negativos
 
     const entrada = usuariosTurnoTabela[usuario]?.entrada || "08:00";
     const [horas] = entrada.split(":").map(Number);
@@ -38,7 +32,6 @@ const calcularProdutividade = (req, res) => {
     const channel = usuariosTurnoTabela[usuario]?.channel || "Desconhecido";
 
     let meta = 11.66;
-
     if (channel === "Treinamento") {
       meta = 0;
     } else if (channel === "Meli Mensageria") {
