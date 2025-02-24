@@ -21,6 +21,7 @@ const calcularProdutividade = (req, res) => {
   const usuariosInfo = Object.keys(productivityData).reduce((acc, usuario) => {
     const now = new Date();
     const currentHour = now.getHours();
+    console.log("HORA ATUAL - ", currentHour);
 
     const entrada = usuariosTurnoTabela[usuario]?.entrada || "08:00";
     const [horas] = entrada.split(":").map(Number);
