@@ -64,8 +64,6 @@ exports.listFiles = async (req, res) => {
 
 // Alterado para buscar e excluir usando Mongoose
 exports.deleteFile = async (req, res) => {
-  console.log(req.body);
-
   const { id } = req.params;
 
   try {
@@ -91,5 +89,41 @@ exports.deleteFile = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: "Erro ao excluir o arquivo." });
+  }
+};
+
+exports.fixFile = async (req, res) => {
+  try {
+    const file = await fileService.getFileById(req.params.id);
+    if (!file)
+      return res.status(404).json({ message: "Arquivo não encontrado" });
+
+    file.fixed = !file.fixed; // Alterna o estado de fixação
+
+    await file.save();
+
+    res.json({ message: "Arquivo atualizado", fixed: file.fixed });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao atualizar o arquivo" });
+  }
+};
+
+exports.downloadFile = async (req, res) => {
+  try {
+    const { filename } = req.params;
+    const file = await fileService.getFileByName(filename);
+
+    if (!file) {
+      return res.status(404).json({ error: "Arquivo não encontrado." });
+    }
+
+    const filePath = path.join(__dirname, "../uploads", file.filename);
+    res.download(filePath, file.originalName, (err) => {
+      if (err) {
+        res.status(500).json({ error: "Erro ao baixar o arquivo." });
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Erro ao processar o download." });
   }
 };

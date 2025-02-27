@@ -1,7 +1,6 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
 const fileRoutes = require("./routes/fileRoutes");
 const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");
@@ -9,15 +8,14 @@ const produtivityRoutes = require("./routes/produtivityRoutes");
 
 const app = express();
 
-app.use(express.json({ limit: "10mb" })); // Aumentando o limite do JSON
-app.use(express.urlencoded({ limit: "10mb", extended: true })); // Para formulários
+app.use(express.json({ limit: process.env.JSON_LIMIT }));
+app.use(express.urlencoded({ limit: process.env.JSON_LIMIT, extended: true }));
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://dashboard-corandini.s3-website-sa-east-1.amazonaws.com",
-    ], // Corrigindo a sintaxe
+    origin: [process.env.CLIENT_ORIGIN_1, process.env.CLIENT_ORIGIN_2].filter(
+      Boolean
+    ),
     credentials: true,
   })
 );

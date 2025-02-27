@@ -19,7 +19,11 @@ const FileSchema = new mongoose.Schema({
   },
   uploadedAt: {
     type: Date,
-    default: Date.now, // Substitui `defaultValue: DataTypes.NOW`
+    default: Date.now,
+  },
+  fixed: {
+    type: Boolean,
+    default: false,
   },
 });
 

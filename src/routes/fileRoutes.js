@@ -15,8 +15,15 @@ router.post(
 
 // Rota para listar arquivos
 router.get("/list", FileController.listFiles);
+
+router.put("/fix/:id", FileController.fixFile);
+
+// Rota de download
+router.get("/download/:filename", FileController.downloadFile);
+
 // Rota de exclusão
 router.delete("/delete/:id", FileController.deleteFile);
 // Rota de ler xlsx
 router.get("/excel-data", FileController.getExcelData);
+
 module.exports = router;

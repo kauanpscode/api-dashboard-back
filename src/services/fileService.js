@@ -26,4 +26,8 @@ const getFileById = async (id) => {
   return await FileModel.findById(id); // Substitui `findByPk(id)`
 };
 
-module.exports = { addFile, getFiles, deleteFile, getFileById };
+const getFileByName = async (filename) => {
+  return await FileModel.findOne({ filename });
+};
+
+module.exports = { addFile, getFiles, deleteFile, getFileById, getFileByName };

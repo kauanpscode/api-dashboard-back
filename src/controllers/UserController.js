@@ -36,7 +36,6 @@ const getAllUsers = async (req, res) => {
 
 // Obter um usuário pelo ID
 const getUserById = async (req, res) => {
-  console.log(req.params);
   try {
     const { _id } = req.params;
     const user = await User.findById(_id); // Busca no MongoDB pelo _id

@@ -38,8 +38,9 @@ const calcularProdutividade = (req, res) => {
       meta = 16.66;
     } else if (["Meli Reclamação", "Meli Mediação"].includes(channel)) {
       meta = 14.2;
+    } else if (channel === "Liderança") {
+      meta = 14.2;
     }
-
     const metaTotal = Math.floor(meta * horasTrabalhadas);
     const porcentagem =
       metaTotal > 0
@@ -48,7 +49,7 @@ const calcularProdutividade = (req, res) => {
 
     acc[usuario] = {
       produtividade: productivityData[usuario] || 0,
-      tma: TMA[usuario]?.mediaTMA || 0,
+      tma: TMA.tma[usuario]?.mediaTMA || 0,
       turno: usuariosTurnoTabela[usuario]?.shift || "Desconhecido",
       channel: channel,
       meta: metaTotal,
@@ -65,14 +66,19 @@ const calcularProdutividade = (req, res) => {
       return obj;
     }, {});
 
-  // Ordenando os usuários por turno
   const usuariosOrdenadosPorTurno = Object.fromEntries(
     Object.entries(usuariosOrdenados).sort(([, a], [, b]) =>
       a.turno.localeCompare(b.turno)
     )
   );
 
-  return res.json(usuariosOrdenadosPorTurno);
+  const response = {
+    usuariosOrdenadosPorTurno,
+    totalAtendimentosGeral: TMA.totalAtendimentosGeral,
+    mediaTMAGeral: TMA.mediaTMAGeral,
+  };
+
+  return res.json(response);
 };
 
 // Funções auxiliares
@@ -92,6 +98,8 @@ const contarUsuarios = (arquivos, dataFiltro) => {
 
 const getTMA = (arquivos, dataFiltro) => {
   const tma = {};
+  let totalTempoGeral = 0;
+  let totalAtendimentosGeral = 0;
 
   for (const arquivo of arquivos) {
     for (const item of arquivo.data) {
@@ -117,10 +125,12 @@ const getTMA = (arquivos, dataFiltro) => {
 
         tma[usuario].totalTempo += tmaOperador;
         tma[usuario].totalAtendimentos += 1;
+
+        totalTempoGeral += tmaOperador;
+        totalAtendimentosGeral += 1;
       }
     }
   }
-
   for (const usuario in tma) {
     tma[usuario].mediaTMA =
       tma[usuario].totalAtendimentos > 0
@@ -128,7 +138,13 @@ const getTMA = (arquivos, dataFiltro) => {
         : 0; // Garante que não há divisão por zero
   }
 
-  return tma;
+  return {
+    tma,
+    mediaTMAGeral: totalTempoGeral / totalAtendimentosGeral,
+    totalAtendimentosGeral,
+  };
 };
 
-module.exports = { calcularProdutividade };
+module.exports = {
+  calcularProdutividade,
+};

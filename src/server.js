@@ -1,10 +1,14 @@
 const app = require("./App"); // Importa o app configurado
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const mongoose = require("mongoose"); // Importando mongoose
 
 // URL de conexão com o MongoDB
-const mongoURI =
-  "mongodb+srv://kauanps2271:daRD9FH2KqJLNNnJ@dashboard-corandini.sta2s.mongodb.net/?retryWrites=true&w=majority&appName=dashboard-corandini";
+const mongoURI = process.env.MONGO_URI;
+
+if (!mongoURI) {
+  console.error("❌ ERRO: MONGO_URI não está definido no .env");
+  process.exit(1); // Sai da aplicação com erro
+}
 
 // Conectar ao MongoDB
 mongoose
