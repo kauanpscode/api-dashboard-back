@@ -7,7 +7,6 @@ const authRoutes = require("./routes/authRoutes");
 const produtivityRoutes = require("./routes/produtivityRoutes");
 
 const app = express();
-console.log("MONGO_URI:", process.env.MONGO_URI);
 
 app.use(express.json({ limit: process.env.JSON_LIMIT }));
 app.use(express.urlencoded({ limit: process.env.JSON_LIMIT, extended: true }));
