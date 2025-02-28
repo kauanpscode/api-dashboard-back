@@ -1,4 +1,6 @@
-const calcularProdutividade = (req, res) => {
+const fileService = require("../services/fileService");
+
+const calcularProdutividade = async (req, res) => {
   const { excelData, users } = req.body;
 
   if (!excelData || !users) {
@@ -7,7 +9,7 @@ const calcularProdutividade = (req, res) => {
 
   const currentDate = new Date().toISOString().split("T")[0];
   const productivityData = contarUsuarios(excelData, [currentDate]);
-  const TMA = getTMA(excelData, [currentDate]);
+  const TMA = await getTMA(excelData, [currentDate]);
 
   const usuariosTurnoTabela = users.reduce((acc, usuario) => {
     acc[usuario.name] = {
@@ -76,6 +78,7 @@ const calcularProdutividade = (req, res) => {
     usuariosOrdenadosPorTurno,
     totalAtendimentosGeral: TMA.totalAtendimentosGeral,
     mediaTMAGeral: TMA.mediaTMAGeral,
+    atendimentosPorCanal: TMA.atendimentosPorCanal,
   };
 
   return res.json(response);
@@ -96,14 +99,30 @@ const contarUsuarios = (arquivos, dataFiltro) => {
   return contador;
 };
 
-const getTMA = (arquivos, dataFiltro) => {
+const getTMA = async (arquivos, dataFiltro) => {
+  const files = await fileService.getFiles();
+  const filenameToChannel = new Map(
+    files.map((item) => [item.filename, item.channel_slug])
+  );
   const tma = {};
   let totalTempoGeral = 0;
   let totalAtendimentosGeral = 0;
+  let atendimentosPorCanal = {};
 
   for (const arquivo of arquivos) {
+    const channelSlug =
+      filenameToChannel.get(arquivo.fileName) || "desconhecido";
+
     for (const item of arquivo.data) {
       let dataTratamento = item["DATA DE TRATAMENTO"]?.split(" ")[0];
+
+      if (!atendimentosPorCanal[channelSlug]) {
+        atendimentosPorCanal[channelSlug] = {
+          totalTempo: 0,
+          totalAtendimentos: 0,
+          operadores: {},
+        };
+      }
 
       if (dataFiltro.includes(dataTratamento)) {
         const usuario = item["USUÁRIO QUE FEZ O TRATAMENTO"];
@@ -128,6 +147,22 @@ const getTMA = (arquivos, dataFiltro) => {
 
         totalTempoGeral += tmaOperador;
         totalAtendimentosGeral += 1;
+
+        if (!atendimentosPorCanal[channelSlug].operadores[usuario]) {
+          atendimentosPorCanal[channelSlug].operadores[usuario] = {
+            totalTempo: 0,
+            totalAtendimentos: 0,
+          };
+        }
+
+        atendimentosPorCanal[channelSlug].operadores[usuario].totalTempo +=
+          tmaOperador;
+        atendimentosPorCanal[channelSlug].operadores[
+          usuario
+        ].totalAtendimentos += 1;
+
+        atendimentosPorCanal[channelSlug].totalTempo += tmaOperador;
+        atendimentosPorCanal[channelSlug].totalAtendimentos += 1;
       }
     }
   }
@@ -138,8 +173,19 @@ const getTMA = (arquivos, dataFiltro) => {
         : 0; // Garante que não há divisão por zero
   }
 
+  for (const canal in atendimentosPorCanal) {
+    for (const usuario in atendimentosPorCanal[canal].operadores) {
+      const operador = atendimentosPorCanal[canal].operadores[usuario];
+      operador.mediaTMA =
+        operador.totalAtendimentos > 0
+          ? operador.totalTempo / operador.totalAtendimentos
+          : 0;
+    }
+  }
+
   return {
     tma,
+    atendimentosPorCanal,
     mediaTMAGeral: totalTempoGeral / totalAtendimentosGeral,
     totalAtendimentosGeral,
   };

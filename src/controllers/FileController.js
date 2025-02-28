@@ -64,6 +64,7 @@ exports.listFiles = async (req, res) => {
 
 // Alterado para buscar e excluir usando Mongoose
 exports.deleteFile = async (req, res) => {
+  const files = await fileService.getFiles();
   const { id } = req.params;
 
   try {
