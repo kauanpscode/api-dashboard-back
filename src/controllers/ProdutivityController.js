@@ -57,6 +57,7 @@ const calcularProdutividade = async (req, res) => {
       meta: metaTotal,
       porcentagem: porcentagem,
     };
+
     return acc;
   }, {});
 
@@ -67,6 +68,11 @@ const calcularProdutividade = async (req, res) => {
       obj[chave] = valor;
       return obj;
     }, {});
+
+  const metaTotalGeral = Object.values(usuariosInfo).reduce(
+    (acc, usuario) => acc + usuario.meta,
+    0
+  );
 
   const usuariosOrdenadosPorTurno = Object.fromEntries(
     Object.entries(usuariosOrdenados).sort(([, a], [, b]) =>
@@ -79,6 +85,7 @@ const calcularProdutividade = async (req, res) => {
     totalAtendimentosGeral: TMA.totalAtendimentosGeral,
     mediaTMAGeral: TMA.mediaTMAGeral,
     atendimentosPorCanal: TMA.atendimentosPorCanal,
+    metaTotalGeral: metaTotalGeral,
   };
 
   return res.json(response);
