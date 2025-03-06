@@ -43,7 +43,7 @@ const calcularProdutividade = async (req, res) => {
     } else if (channel === "Liderança") {
       meta = 14.2;
     }
-    const metaTotal = Math.floor(meta * horasTrabalhadas);
+    const metaTotal = Math.round(meta * horasTrabalhadas);
     const porcentagem =
       metaTotal > 0
         ? ((productivityData[usuario] / metaTotal) * 100).toFixed(0)
