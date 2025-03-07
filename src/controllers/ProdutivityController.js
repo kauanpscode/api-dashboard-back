@@ -7,7 +7,9 @@ const calcularProdutividade = async (req, res) => {
     return res.status(400).json({ error: "Dados insuficientes" });
   }
 
-  const currentDate = new Date().toISOString().split("T")[0];
+  const currentDate = new Date().toLocaleDateString("en-CA", {
+    timeZone: "America/Sao_Paulo",
+  });
   const productivityData = contarUsuarios(excelData, [currentDate]);
   const TMA = await getTMA(excelData, [currentDate]);
 
@@ -24,7 +26,6 @@ const calcularProdutividade = async (req, res) => {
     const now = new Date();
     let currentHour = now.getUTCHours() - 3; // Ajusta para GMT-3
     if (currentHour < 0) currentHour += 24; // Correção para valores negativos
-
     const entrada = usuariosTurnoTabela[usuario]?.entrada || "08:00";
     const [horas] = entrada.split(":").map(Number);
     let horasTrabalhadas = currentHour - horas;
