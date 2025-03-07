@@ -10,6 +10,7 @@ const calcularProdutividade = async (req, res) => {
   const currentDate = new Date().toLocaleDateString("en-CA", {
     timeZone: "America/Sao_Paulo",
   });
+
   const productivityData = contarUsuarios(excelData, [currentDate]);
   const TMA = await getTMA(excelData, [currentDate]);
 
@@ -34,7 +35,7 @@ const calcularProdutividade = async (req, res) => {
 
     const channel = usuariosTurnoTabela[usuario]?.channel || "Desconhecido";
 
-    let meta = 11.66;
+    let meta = 13.33;
     if (channel === "Treinamento") {
       meta = 0;
     } else if (channel === "Meli Mensageria") {
