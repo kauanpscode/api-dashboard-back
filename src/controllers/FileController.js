@@ -118,7 +118,11 @@ exports.downloadFile = async (req, res) => {
       return res.status(404).json({ error: "Arquivo não encontrado." });
     }
 
-    const filePath = path.join(__dirname, "../uploads", file.filename);
+    const filePath = path.join(
+      __dirname,
+      "../uploads",
+      file.filename + "&" + file.channel_slug
+    );
     res.download(filePath, file.originalName, (err) => {
       if (err) {
         res.status(500).json({ error: "Erro ao baixar o arquivo." });
