@@ -43,7 +43,7 @@ exports.uploadFile = async (req, res) => {
     await fileService.addFile(req.file, channel_slug);
     res.status(200).json({
       message: "Arquivo enviado com sucesso!",
-      filePath: `/uploads/${req.file.filename}`,
+      filePath: `/uploads/${req.file.filename + req.file.channel_slug}`,
     });
   } catch (error) {
     res
