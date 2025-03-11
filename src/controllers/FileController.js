@@ -87,11 +87,11 @@ exports.fixFile = async (req, res) => {
     if (!file)
       return res.status(404).json({ message: "Arquivo não encontrado" });
 
-    const updatedFile = await fileService.updateFile(req.params.id, {
-      fixed: !file.fixed,
-    });
+    file.fixed = !file.fixed; // Alterna o estado de fixação
 
-    res.json({ message: "Arquivo atualizado", fixed: updatedFile.fixed });
+    await file.save();
+
+    res.json({ message: "Arquivo atualizado", fixed: file.fixed });
   } catch (error) {
     res.status(500).json({ error: "Erro ao atualizar o arquivo" });
   }
