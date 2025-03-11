@@ -107,7 +107,7 @@ exports.downloadFile = async (req, res) => {
     }
 
     const filePath = path.join(uploadPath, file.filename);
-    const downloadName = `${file.originalName}_${file.channel_slug}`;
+    const downloadName = `${file.originalName}_${file.channel_slug}.xlsx`; // Nome formatado
 
     res.download(filePath, downloadName);
   } catch (error) {
