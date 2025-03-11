@@ -83,7 +83,7 @@ exports.deleteFile = async (req, res) => {
 
 exports.fixFile = async (req, res) => {
   try {
-    const file = await fileService.getFileById(req.params._id);
+    const file = await fileService.getFileById(req.params.id);
     if (!file)
       return res.status(404).json({ message: "Arquivo não encontrado" });
 
