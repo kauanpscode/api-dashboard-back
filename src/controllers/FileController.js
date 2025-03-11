@@ -119,7 +119,7 @@ exports.downloadFile = async (req, res) => {
     }
 
     const filePath = path.join(__dirname, "../uploads", file.filename);
-    const downloadName = `${file.channel_slug}_${file.originalName}`;
+    const downloadName = `${file.originalName}${file.channel_slug}`;
 
     res.download(filePath, downloadName, (err) => {
       if (err) {
