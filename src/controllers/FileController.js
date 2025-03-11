@@ -119,7 +119,9 @@ exports.downloadFile = async (req, res) => {
     }
 
     const filePath = path.join(__dirname, "../uploads", file.filename);
-    res.download(filePath, file.originalName, (err) => {
+    const downloadName = `${file.channel_slug}_${file.originalName}`;
+
+    res.download(filePath, downloadName, (err) => {
       if (err) {
         res.status(500).json({ error: "Erro ao baixar o arquivo." });
       }
