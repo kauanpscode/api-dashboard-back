@@ -21,12 +21,6 @@ const calcularProdutividade = async (req, res) => {
       entrada: usuario.shift.split("-")[1],
     };
 
-    const currentHour = new Date().toLocaleTimeString("pt-BR", {
-      timeZone: "America/Sao_Paulo",
-      hour12: false,
-      hour: "2-digit",
-    });
-
     return acc;
   }, {});
 
