@@ -14,183 +14,209 @@ const calcularProdutividade = async (req, res) => {
   const productivityData = contarUsuarios(excelData, [currentDate]);
   const TMA = await getTMA(excelData, [currentDate]);
 
-  const usuariosTurnoTabela = new Map(
-    users.map((usuario) => [
-      usuario.name,
-      {
-        shift: usuario.shift,
-        channel: usuario.channel,
-        entrada: usuario.shift.split("-")[1],
-      },
-    ])
-  );
-
-  const currentHour = new Date().toLocaleTimeString("pt-BR", {
-    timeZone: "America/Sao_Paulo",
-    hour12: false,
-    hour: "2-digit",
-  });
-
-  const usuariosInfo = Object.entries(productivityData).reduce(
-    (acc, [usuario, produtividade]) => {
-      const userShift = usuariosTurnoTabela.get(usuario) || {};
-      const entrada = userShift.entrada || "08:00";
-      const [horasEntrada] = entrada.split(":").map(Number);
-      let horasTrabalhadas = Math.max(
-        0,
-        Math.min(6, currentHour - horasEntrada)
-      );
-
-      const metaMap = {
-        Treinamento: 0,
-        "Meli Mensageria": 16.66,
-        "Meli Reclamação": 14.2,
-        "Meli Mediação": 14.2,
-        Liderança: 14.2,
-      };
-
-      const meta = metaMap[userShift.channel] || 13.33;
-      const metaTotal = Math.round(meta * horasTrabalhadas);
-      const porcentagem =
-        metaTotal > 0 ? ((produtividade / metaTotal) * 100).toFixed(0) : "-";
-
-      acc[usuario] = {
-        produtividade,
-        tma: TMA.tma[usuario]?.mediaTMA || 0,
-        turno: userShift.shift || "Desconhecido",
-        channel: userShift.channel || "Desconhecido",
-        meta: metaTotal,
-        porcentagem,
-      };
-
-      return acc;
-    },
-    {}
-  );
-
-  const usuariosOrdenadosPorTurno = Object.entries(usuariosInfo)
-    .sort(([, a], [, b]) => a.turno.localeCompare(b.turno))
-    .reduce((obj, [chave, valor]) => ((obj[chave] = valor), obj), {});
-
-  return res.json({
-    usuariosOrdenadosPorTurno,
-    totalAtendimentosGeral: TMA.totalAtendimentosGeral,
-    mediaTMAGeral: TMA.mediaTMAGeral,
-    atendimentosPorCanal: TMA.atendimentosPorCanal,
-    metaTotalGeral: Object.values(usuariosInfo).reduce(
-      (acc, u) => acc + u.meta,
-      0
-    ),
-    dataTratamentoVaziasPorCanal: TMA.dataTratamentoVaziasPorCanal,
-  });
-};
-
-// Função para contar usuários
-const contarUsuarios = (arquivos, dataFiltro) => {
-  return arquivos.reduce((contador, arquivo) => {
-    arquivo.data.forEach(
-      ({
-        "DATA DE TRATAMENTO": dataTratamento,
-        "USUÁRIO QUE FEZ O TRATAMENTO": usuario,
-      }) => {
-        if (dataFiltro.includes(dataTratamento?.split(" ")[0])) {
-          contador[usuario] = (contador[usuario] || 0) + 1;
-        }
-      }
-    );
-    return contador;
-  }, {});
-};
-
-// Função para calcular TMA
-const getTMA = async (arquivos, dataFiltro) => {
-  const files = await fileService.getFiles();
-  const filenameToChannel = new Map(
-    files.map(({ filename, channel_slug }) => [filename, channel_slug])
-  );
-
-  let totalTempoGeral = 0,
-    totalAtendimentosGeral = 0;
-  const atendimentosPorCanal = {};
-  const dataTratamentoVaziasPorCanal = {};
-
-  const tma = arquivos.reduce((acc, arquivo) => {
-    const channelSlug =
-      filenameToChannel.get(arquivo.fileName) || "desconhecido";
-    atendimentosPorCanal[channelSlug] ||= {
-      totalTempo: 0,
-      totalAtendimentos: 0,
-      operadores: {},
+  const usuariosTurnoTabela = users.reduce((acc, usuario) => {
+    acc[usuario.name] = {
+      shift: usuario.shift,
+      channel: usuario.channel,
+      entrada: usuario.shift.split("-")[1],
     };
-    dataTratamentoVaziasPorCanal[channelSlug] ||= 0;
 
-    arquivo.data.forEach(
-      ({
-        "DATA DE TRATAMENTO": dataTratamento,
-        "USUÁRIO QUE FEZ O TRATAMENTO": usuario,
-        inicio_atendimento,
-        fim_atendimento,
-      }) => {
-        if (!dataTratamento) {
-          dataTratamentoVaziasPorCanal[channelSlug]++;
-          return;
-        }
-
-        if (dataFiltro.includes(dataTratamento.split(" ")[0])) {
-          const inicio = new Date(inicio_atendimento?.replace(" ", "T"));
-          const fim = new Date(fim_atendimento?.replace(" ", "T"));
-
-          if (isNaN(inicio) || isNaN(fim)) return;
-
-          const tmaOperador = (fim - inicio) / 60000;
-
-          acc[usuario] ||= { totalTempo: 0, totalAtendimentos: 0 };
-          acc[usuario].totalTempo += tmaOperador;
-          acc[usuario].totalAtendimentos += 1;
-
-          totalTempoGeral += tmaOperador;
-          totalAtendimentosGeral += 1;
-
-          atendimentosPorCanal[channelSlug].operadores[usuario] ||= {
-            totalTempo: 0,
-            totalAtendimentos: 0,
-          };
-          atendimentosPorCanal[channelSlug].operadores[usuario].totalTempo +=
-            tmaOperador;
-          atendimentosPorCanal[channelSlug].operadores[
-            usuario
-          ].totalAtendimentos += 1;
-          atendimentosPorCanal[channelSlug].totalTempo += tmaOperador;
-          atendimentosPorCanal[channelSlug].totalAtendimentos += 1;
-        }
-      }
-    );
+    const currentHour = new Date().toLocaleTimeString("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      hour12: false,
+      hour: "2-digit",
+    });
 
     return acc;
   }, {});
 
-  Object.values(tma).forEach(
-    (user) =>
-      (user.mediaTMA = user.totalAtendimentos
-        ? user.totalTempo / user.totalAtendimentos
-        : 0)
+  const usuariosInfo = Object.keys(productivityData).reduce((acc, usuario) => {
+    const now = new Date();
+    let currentHour = now.getUTCHours() - 3; // Ajusta para GMT-3
+    if (currentHour < 0) currentHour += 24; // Correção para valores negativos
+    const entrada = usuariosTurnoTabela[usuario]?.entrada || "08:00";
+    const [horas] = entrada.split(":").map(Number);
+    let horasTrabalhadas = currentHour - horas;
+
+    if (horasTrabalhadas > 6) horasTrabalhadas = 6;
+
+    const channel = usuariosTurnoTabela[usuario]?.channel || "Desconhecido";
+
+    let meta = 13.33;
+    if (channel === "Treinamento") {
+      meta = 0;
+    } else if (channel === "Meli Mensageria") {
+      meta = 16.66;
+    } else if (["Meli Reclamação", "Meli Mediação"].includes(channel)) {
+      meta = 14.2;
+    } else if (channel === "Liderança") {
+      meta = 14.2;
+    }
+    const metaTotal = Math.round(meta * horasTrabalhadas);
+    const porcentagem =
+      metaTotal > 0
+        ? ((productivityData[usuario] / metaTotal) * 100).toFixed(0)
+        : "-";
+
+    acc[usuario] = {
+      produtividade: productivityData[usuario] || 0,
+      tma: TMA.tma[usuario]?.mediaTMA || 0,
+      turno: usuariosTurnoTabela[usuario]?.shift || "Desconhecido",
+      channel: channel,
+      meta: metaTotal,
+      porcentagem: porcentagem,
+    };
+
+    return acc;
+  }, {});
+
+  // Ordenando os usuários por produtividade (maior para menor)
+  const usuariosOrdenados = Object.entries(usuariosInfo)
+    .sort(([, a], [, b]) => b.produtividade - a.produtividade)
+    .reduce((obj, [chave, valor]) => {
+      obj[chave] = valor;
+      return obj;
+    }, {});
+
+  const metaTotalGeral = Object.values(usuariosInfo).reduce(
+    (acc, usuario) => acc + usuario.meta,
+    0
   );
 
-  Object.values(atendimentosPorCanal).forEach(({ operadores }) =>
-    Object.values(operadores).forEach(
-      (user) =>
-        (user.mediaTMA = user.totalAtendimentos
-          ? user.totalTempo / user.totalAtendimentos
-          : 0)
+  const usuariosOrdenadosPorTurno = Object.fromEntries(
+    Object.entries(usuariosOrdenados).sort(([, a], [, b]) =>
+      a.turno.localeCompare(b.turno)
     )
   );
+
+  const response = {
+    usuariosOrdenadosPorTurno,
+    totalAtendimentosGeral: TMA.totalAtendimentosGeral,
+    mediaTMAGeral: TMA.mediaTMAGeral,
+    atendimentosPorCanal: TMA.atendimentosPorCanal,
+    metaTotalGeral: metaTotalGeral,
+    dataTratamentoVaziasPorCanal: TMA.dataTratamentoVaziasPorCanal,
+  };
+
+  return res.json(response);
+};
+
+// Funções auxiliares
+const contarUsuarios = (arquivos, dataFiltro) => {
+  const contador = {};
+  for (const arquivo of arquivos) {
+    for (const item of arquivo.data) {
+      let dataTratamento = item["DATA DE TRATAMENTO"]?.split(" ")[0];
+      if (dataFiltro.includes(dataTratamento)) {
+        const usuario = item["USUÁRIO QUE FEZ O TRATAMENTO"];
+        contador[usuario] = (contador[usuario] || 0) + 1;
+      }
+    }
+  }
+  return contador;
+};
+
+const getTMA = async (arquivos, dataFiltro) => {
+  const files = await fileService.getFiles();
+  const filenameToChannel = new Map(
+    files.map((item) => [item.filename, item.channel_slug])
+  );
+
+  const tma = {};
+  let totalTempoGeral = 0;
+  let totalAtendimentosGeral = 0;
+  let atendimentosPorCanal = {};
+  let dataTratamentoVaziasPorCanal = {}; // Novo objeto para contar os vazios
+
+  for (const arquivo of arquivos) {
+    const channelSlug =
+      filenameToChannel.get(arquivo.fileName) || "desconhecido";
+
+    if (!atendimentosPorCanal[channelSlug]) {
+      atendimentosPorCanal[channelSlug] = {
+        totalTempo: 0,
+        totalAtendimentos: 0,
+        operadores: {},
+      };
+    }
+
+    if (!dataTratamentoVaziasPorCanal[channelSlug]) {
+      dataTratamentoVaziasPorCanal[channelSlug] = 0;
+    }
+
+    for (const item of arquivo.data) {
+      let dataTratamento = item["DATA DE TRATAMENTO"]?.split(" ")[0];
+
+      // Contagem de "DATA DE TRATAMENTO" vazias por canal
+      if (!dataTratamento) {
+        dataTratamentoVaziasPorCanal[channelSlug]++;
+        continue; // Pula este item, pois não tem data de tratamento
+      }
+
+      if (dataFiltro.includes(dataTratamento)) {
+        const usuario = item["USUÁRIO QUE FEZ O TRATAMENTO"];
+        const inicioStr = item["inicio_atendimento"]?.replace(" ", "T");
+        const fimStr = item["fim_atendimento"]?.replace(" ", "T");
+
+        if (!inicioStr || !fimStr) continue;
+
+        const inicio = new Date(inicioStr);
+        const fim = new Date(fimStr);
+
+        if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) continue;
+
+        const tmaOperador = (fim - inicio) / 1000 / 60;
+
+        if (!tma[usuario]) {
+          tma[usuario] = { totalTempo: 0, totalAtendimentos: 0 };
+        }
+
+        tma[usuario].totalTempo += tmaOperador;
+        tma[usuario].totalAtendimentos += 1;
+
+        totalTempoGeral += tmaOperador;
+        totalAtendimentosGeral += 1;
+
+        if (!atendimentosPorCanal[channelSlug].operadores[usuario]) {
+          atendimentosPorCanal[channelSlug].operadores[usuario] = {
+            totalTempo: 0,
+            totalAtendimentos: 0,
+          };
+        }
+
+        atendimentosPorCanal[channelSlug].operadores[usuario].totalTempo +=
+          tmaOperador;
+        atendimentosPorCanal[channelSlug].operadores[
+          usuario
+        ].totalAtendimentos += 1;
+
+        atendimentosPorCanal[channelSlug].totalTempo += tmaOperador;
+        atendimentosPorCanal[channelSlug].totalAtendimentos += 1;
+      }
+    }
+  }
+
+  for (const usuario in tma) {
+    tma[usuario].mediaTMA =
+      tma[usuario].totalAtendimentos > 0
+        ? tma[usuario].totalTempo / tma[usuario].totalAtendimentos
+        : 0;
+  }
+
+  for (const canal in atendimentosPorCanal) {
+    for (const usuario in atendimentosPorCanal[canal].operadores) {
+      const operador = atendimentosPorCanal[canal].operadores[usuario];
+      operador.mediaTMA =
+        operador.totalAtendimentos > 0
+          ? operador.totalTempo / operador.totalAtendimentos
+          : 0;
+    }
+  }
 
   return {
     tma,
     atendimentosPorCanal,
-    mediaTMAGeral: totalAtendimentosGeral
-      ? totalTempoGeral / totalAtendimentosGeral
-      : 0,
+    mediaTMAGeral: totalTempoGeral / totalAtendimentosGeral,
     totalAtendimentosGeral,
     dataTratamentoVaziasPorCanal,
   };
