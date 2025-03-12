@@ -88,6 +88,7 @@ const calcularProdutividade = async (req, res) => {
     mediaTMAGeral: TMA.mediaTMAGeral,
     atendimentosPorCanal: TMA.atendimentosPorCanal,
     metaTotalGeral: metaTotalGeral,
+    dataTratamentoVaziasPorCanal: TMA.dataTratamentoVaziasPorCanal,
   };
 
   return res.json(response);
