@@ -1,3 +1,121 @@
+const fileService = require("../services/fileService");
+
+const calcularProdutividade = async (req, res) => {
+  const { excelData, users } = req.body;
+
+  if (!excelData || !users) {
+    return res.status(400).json({ error: "Dados insuficientes" });
+  }
+
+  const currentDate = new Date().toLocaleDateString("en-CA", {
+    timeZone: "America/Sao_Paulo",
+  });
+
+  const productivityData = contarUsuarios(excelData, [currentDate]);
+  const TMA = await getTMA(excelData, [currentDate]);
+
+  const usuariosTurnoTabela = users.reduce((acc, usuario) => {
+    acc[usuario.name] = {
+      shift: usuario.shift,
+      channel: usuario.channel,
+      entrada: usuario.shift.split("-")[1],
+    };
+
+    const currentHour = new Date().toLocaleTimeString("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      hour12: false,
+      hour: "2-digit",
+    });
+
+    return acc;
+  }, {});
+
+  const usuariosInfo = Object.keys(productivityData).reduce((acc, usuario) => {
+    const now = new Date();
+    let currentHour = now.getUTCHours() - 3; // Ajusta para GMT-3
+    if (currentHour < 0) currentHour += 24; // Correção para valores negativos
+    const entrada = usuariosTurnoTabela[usuario]?.entrada || "08:00";
+    const [horas] = entrada.split(":").map(Number);
+    let horasTrabalhadas = currentHour - horas;
+
+    if (horasTrabalhadas > 6) horasTrabalhadas = 6;
+
+    const channel = usuariosTurnoTabela[usuario]?.channel || "Desconhecido";
+
+    let meta = 13.33;
+    if (channel === "Treinamento") {
+      meta = 0;
+    } else if (channel === "Meli Mensageria") {
+      meta = 16.66;
+    } else if (["Meli Reclamação", "Meli Mediação"].includes(channel)) {
+      meta = 14.2;
+    } else if (channel === "Liderança") {
+      meta = 14.2;
+    }
+    const metaTotal = Math.round(meta * horasTrabalhadas);
+    const porcentagem =
+      metaTotal > 0
+        ? ((productivityData[usuario] / metaTotal) * 100).toFixed(0)
+        : "-";
+
+    acc[usuario] = {
+      produtividade: productivityData[usuario] || 0,
+      tma: TMA.tma[usuario]?.mediaTMA || 0,
+      turno: usuariosTurnoTabela[usuario]?.shift || "Desconhecido",
+      channel: channel,
+      meta: metaTotal,
+      porcentagem: porcentagem,
+    };
+
+    return acc;
+  }, {});
+
+  // Ordenando os usuários por produtividade (maior para menor)
+  const usuariosOrdenados = Object.entries(usuariosInfo)
+    .sort(([, a], [, b]) => b.produtividade - a.produtividade)
+    .reduce((obj, [chave, valor]) => {
+      obj[chave] = valor;
+      return obj;
+    }, {});
+
+  const metaTotalGeral = Object.values(usuariosInfo).reduce(
+    (acc, usuario) => acc + usuario.meta,
+    0
+  );
+
+  const usuariosOrdenadosPorTurno = Object.fromEntries(
+    Object.entries(usuariosOrdenados).sort(([, a], [, b]) =>
+      a.turno.localeCompare(b.turno)
+    )
+  );
+
+  const response = {
+    usuariosOrdenadosPorTurno,
+    totalAtendimentosGeral: TMA.totalAtendimentosGeral,
+    mediaTMAGeral: TMA.mediaTMAGeral,
+    atendimentosPorCanal: TMA.atendimentosPorCanal,
+    metaTotalGeral: metaTotalGeral,
+    dataTratamentoVaziasPorCanal: TMA.dataTratamentoVaziasPorCanal,
+  };
+
+  return res.json(response);
+};
+
+// Funções auxiliares
+const contarUsuarios = (arquivos, dataFiltro) => {
+  const contador = {};
+  for (const arquivo of arquivos) {
+    for (const item of arquivo.data) {
+      let dataTratamento = item["DATA DE TRATAMENTO"]?.split(" ")[0];
+      if (dataFiltro.includes(dataTratamento)) {
+        const usuario = item["USUÁRIO QUE FEZ O TRATAMENTO"];
+        contador[usuario] = (contador[usuario] || 0) + 1;
+      }
+    }
+  }
+  return contador;
+};
+
 const getTMA = async (arquivos, dataFiltro) => {
   const files = await fileService.getFiles();
   const filenameToChannel = new Map(
@@ -100,6 +218,10 @@ const getTMA = async (arquivos, dataFiltro) => {
     atendimentosPorCanal,
     mediaTMAGeral: totalTempoGeral / totalAtendimentosGeral,
     totalAtendimentosGeral,
-    dataTratamentoVaziasPorCanal, // Adicionando o novo objeto ao retorno
+    dataTratamentoVaziasPorCanal,
   };
+};
+
+module.exports = {
+  calcularProdutividade,
 };
