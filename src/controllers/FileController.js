@@ -54,19 +54,6 @@ exports.uploadFile = async (req, res) => {
 exports.listFiles = async (req, res) => {
   try {
     const files = await fileService.getFiles();
-
-    const nameCount = {};
-    const duplicates = [];
-
-    files.forEach((file) => {
-      nameCount[file.originalName]++;
-      if (nameCount[file.originalName] > 1) {
-        duplicates.push(file.originalName);
-      } else {
-        nameCount[file.originalName] = 1;
-      }
-    });
-    console.log("Nomes duplicados: ", duplicates);
     res.status(200).json(files);
   } catch (error) {
     res.status(500).json({ error: "Erro ao recuperar arquivos." });
