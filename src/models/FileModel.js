@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const FileSchema = new mongoose.Schema({
   originalName: {
@@ -28,6 +28,6 @@ const FileSchema = new mongoose.Schema({
 });
 
 // Criar o modelo File baseado no schema
-const File = mongoose.model("File", FileSchema);
+const File = mongoose.model('File', FileSchema);
 
 module.exports = File;

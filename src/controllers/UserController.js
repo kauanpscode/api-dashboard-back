@@ -1,4 +1,4 @@
-const User = require("../models/UserModel");
+const User = require('../models/UserModel');
 
 // Criar um novo usuário
 const createUser = async (req, res) => {
@@ -8,7 +8,7 @@ const createUser = async (req, res) => {
     if (!name || !channel || !shift) {
       return res
         .status(400)
-        .json({ error: "Todos os campos são obrigatórios" });
+        .json({ error: 'Todos os campos são obrigatórios' });
     }
 
     const newUser = new User({ name, channel, shift });
@@ -18,7 +18,7 @@ const createUser = async (req, res) => {
   } catch (error) {
     res
       .status(500)
-      .json({ error: "Erro ao criar o usuário", details: error.message });
+      .json({ error: 'Erro ao criar o usuário', details: error.message });
   }
 };
 
@@ -30,7 +30,7 @@ const getAllUsers = async (req, res) => {
   } catch (error) {
     res
       .status(500)
-      .json({ error: "Erro ao buscar usuários", details: error.message });
+      .json({ error: 'Erro ao buscar usuários', details: error.message });
   }
 };
 
@@ -41,14 +41,14 @@ const getUserById = async (req, res) => {
     const user = await User.findById(_id); // Busca no MongoDB pelo _id
 
     if (!user) {
-      return res.status(404).json({ error: "Usuário não encontrado" });
+      return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
     res.status(200).json(user);
   } catch (error) {
     res
       .status(500)
-      .json({ error: "Erro ao buscar o usuário", details: error.message });
+      .json({ error: 'Erro ao buscar o usuário', details: error.message });
   }
 };
 
@@ -60,7 +60,7 @@ const updateUserById = async (req, res) => {
     const user = await User.findById(_id);
 
     if (!user) {
-      return res.status(404).json({ error: "Usuário não encontrado" });
+      return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
     // Atualiza apenas os campos fornecidos
@@ -73,7 +73,7 @@ const updateUserById = async (req, res) => {
   } catch (error) {
     res
       .status(500)
-      .json({ error: "Erro ao atualizar o usuário", details: error.message });
+      .json({ error: 'Erro ao atualizar o usuário', details: error.message });
   }
 };
 
@@ -85,14 +85,14 @@ const deleteUserById = async (req, res) => {
     const user = await User.findByIdAndDelete(id); // Deleta diretamente pelo MongoDB
 
     if (!user) {
-      return res.status(404).json({ error: "Usuário não encontrado" });
+      return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
-    res.status(200).json({ message: "Usuário deletado com sucesso" });
+    res.status(200).json({ message: 'Usuário deletado com sucesso' });
   } catch (error) {
     res
       .status(500)
-      .json({ error: "Erro ao deletar o usuário", details: error.message });
+      .json({ error: 'Erro ao deletar o usuário', details: error.message });
   }
 };
 

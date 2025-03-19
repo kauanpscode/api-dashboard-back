@@ -1,5 +1,5 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const UserLoginSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
@@ -7,8 +7,8 @@ const UserLoginSchema = new mongoose.Schema({
 });
 
 // Middleware para hash de senha antes de salvar o usuário
-UserLoginSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next(); // Se a senha não foi modificada, pula o hash
+UserLoginSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next(); // Se a senha não foi modificada, pula o hash
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
@@ -16,6 +16,6 @@ UserLoginSchema.pre("save", async function (next) {
 });
 
 // Criar o modelo UserLogin baseado no schema
-const UserLogin = mongoose.model("UserLogin", UserLoginSchema);
+const UserLogin = mongoose.model('UserLogin', UserLoginSchema);
 
 module.exports = UserLogin;

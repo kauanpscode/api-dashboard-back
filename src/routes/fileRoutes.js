@@ -1,29 +1,29 @@
-const express = require("express");
-const multer = require("../config/multerConfig");
-const FileController = require("../controllers/FileController");
-const validateFile = require("../middlewares/validateFile");
+const express = require('express');
+const multer = require('../config/multerConfig');
+const FileController = require('../controllers/FileController');
+const validateFile = require('../middlewares/validateFile');
 
 const router = express.Router();
 
 // Rota para upload de arquivos
 router.post(
-  "/upload",
-  multer.single("file"),
+  '/upload',
+  multer.single('file'),
   validateFile,
   FileController.uploadFile
 );
 
 // Rota para listar arquivos
-router.get("/list", FileController.listFiles);
+router.get('/list', FileController.listFiles);
 
-router.put("/fix/:id", FileController.fixFile);
+router.put('/fix/:id', FileController.fixFile);
 
 // Rota de download
-router.get("/download/:filename", FileController.downloadFile);
+router.get('/download/:filename', FileController.downloadFile);
 
 // Rota de exclusão
-router.delete("/delete/:id", FileController.deleteFile);
+router.delete('/delete/:id', FileController.deleteFile);
 // Rota de ler xlsx
-router.get("/excel-data", FileController.getExcelData);
+router.get('/excel-data', FileController.getExcelData);
 
 module.exports = router;

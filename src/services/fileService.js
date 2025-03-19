@@ -1,4 +1,4 @@
-const FileModel = require("../models/FileModel");
+const FileModel = require('../models/FileModel');
 
 // Função para adicionar um arquivo ao banco de dados
 const addFile = async (file, channel_slug) => {
@@ -17,16 +17,16 @@ const getFiles = async () => {
 };
 
 // Função para remover um arquivo do banco de dados
-const deleteFile = async (id) => {
+const deleteFile = async id => {
   return await FileModel.findByIdAndDelete(id); // Substitui `destroy({ where: { id } })`
 };
 
 // Função para encontrar um arquivo específico pelo ID
-const getFileById = async (id) => {
+const getFileById = async id => {
   return await FileModel.findById(id); // Substitui `findByPk(id)`
 };
 
-const getFileByName = async (filename) => {
+const getFileByName = async filename => {
   return await FileModel.findOne({ filename });
 };
 

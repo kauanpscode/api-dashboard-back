@@ -1,10 +1,10 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const fileRoutes = require("./routes/fileRoutes");
-const userRoutes = require("./routes/userRoutes");
-const authRoutes = require("./routes/authRoutes");
-const produtivityRoutes = require("./routes/produtivityRoutes");
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const fileRoutes = require('./routes/fileRoutes');
+const userRoutes = require('./routes/userRoutes');
+const authRoutes = require('./routes/authRoutes');
+const produtivityRoutes = require('./routes/produtivityRoutes');
 
 const app = express();
 
@@ -23,9 +23,9 @@ app.use(
 app.use(express.json());
 
 // Rotas
-app.use("/api", produtivityRoutes);
-app.use("/files/", fileRoutes);
-app.use("/users", userRoutes);
-app.use("/api/auth", authRoutes);
+app.use('/api', produtivityRoutes);
+app.use('/files/', fileRoutes);
+app.use('/users', userRoutes);
+app.use('/api/auth', authRoutes);
 
 module.exports = app;
